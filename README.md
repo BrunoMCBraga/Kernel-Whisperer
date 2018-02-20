@@ -2,7 +2,6 @@
 
 ## What is it?
 
-### Which events are being caught?
 
 
 ## Test environment
