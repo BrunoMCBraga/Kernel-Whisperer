@@ -16,7 +16,7 @@
 3. Compiling and deploying driver:
    1. Start->Windows Driver Kits->WDK [VERSION]->Build Environments->Windows 7->x64 Checked Build Environment
    2. Change directory to the folder where Kernel Whisperer is located
-   3. Run CompileAndDeployDriver. *NOTE:* This script will generate the certificate (amongst other stuff) and save it on Driver->Staging. Once you generate the certificate you can comment the lines responsible for generating it.
+   3. Run CompileAndDeployDriver. **NOTE:** This script will generate the certificate (amongst other stuff) and save it on Driver->Staging. Once you generate the certificate you can comment the lines responsible for generating it.
 4. Compiling and deploying client:
    1. Start->Microsoft Visual Studio [VS VERSION]->Visual Studio Tools->Developer Command Prompt for VS[VS VERSION]
    2. Same as before
