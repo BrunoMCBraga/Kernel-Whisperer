@@ -16,15 +16,15 @@
 3. Compiling and deploying driver:
    1. Start->Windows Driver Kits->WDK [VERSION]->Build Environments->Windows 7->x64 Checked Build Environment
    2. Change directory to the folder where Kernel Whisperer is located
-   3. Run CompileAndDeployDriver. **NOTE:** This script will generate the certificate (amongst other stuff) and save it on Driver->Staging. Once you generate the certificate you can comment the lines responsible for generating it.
+   3. Run CompileAndDeployDriver.cmd. **NOTE:** This script will generate the certificate (amongst other stuff) and save it on Driver->staging. Once you generate the certificate you can comment the lines responsible for generating it.
 4. Compiling and deploying client:
    1. Start->Microsoft Visual Studio [VS VERSION]->Visual Studio Tools->Developer Command Prompt for VS[VS VERSION]
    2. Same as before
-   3. Run CompileAndDeployClient 
+   3. Run CompileAndDeployClient.cmd. 
 
 
 ## Interaction with the database
-I am not leveraging any API to interact with the database. I wanted Kernel Whisperer to be versatile so that i could switch to any type of database with a couple of adjustments. As such, i am leveraging a Python server that reads queries and executes them directly on the OS through the command line. 
+ I am not leveraging any API to interact with the database. I wanted Kernel Whisperer to be versatile so that i could switch to any type of database with a couple of adjustments. As such, i am leveraging a Python server that reads queries and executes them directly on the OS through the command line. 
 
 
 ## Ports, configurations and modules
