@@ -1,7 +1,5 @@
 # Kernel Whisperer
 
-# Kernel Whisperer
-
 ## What is it?
 
 Kernel Whisperer encompasses three components:
