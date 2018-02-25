@@ -32,7 +32,7 @@ I have developed this tool as a means to collect kernel events in a way that cou
 
 I am using the tuple ID+Timestamp to identify a record since KeQuerySystemTime does not provide a timestamp with enough precision to avoid collisions (i.e. events on the same table with the same timestamp).
 
-** Note:** Currently, kernel Whisperer will drop any database called Events before starting the insertions. You can tune this behavior by adjusting the queries on Client->lib->SQLDriver (header and source file).
+**Note:** Currently, kernel Whisperer will drop any database called Events before starting the insertions. You can tune this behavior by adjusting the queries on Client->lib->SQLDriver (header and source file).
 
 
 ## Test environment
