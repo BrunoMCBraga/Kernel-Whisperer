@@ -10,13 +10,6 @@
 
 using namespace std; 
 
-/*
-File: FILE|Timestamp|Pid|Type|File
-Registry: REG|Timestamp|Pid|Type|Key|Value
-		  REG|Timestamp|Pid|Type|Key
-Network: NET|Timestamp|PID|PROT|TYPE|LocalIP|LocalPort|RemoteIp|RemotePort
-*/
-
 
 std::vector<std::wstring> LogParser::parse(std::wstring logLine){
 

@@ -11,7 +11,6 @@
 
 
 
-//This altitude was on one of the examples on Microsoft's GitHub. In order to avoid issues, i have kept it.
 #define REGISTRY_MONITOR_ALTITUDE L"420000"
 #define SIZE_OF_REGISTRY_MONITOR_ALTITUDE_STRING 20
 #define SIZE_OF_REGISTRY_MONITOR_ALTITUDE_IN_BYTES SIZE_OF_REGISTRY_MONITOR_ALTITUDE_STRING*sizeof(WCHAR)
@@ -74,9 +73,9 @@ NTSTATUS ClassDeviceControlDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			copiedBytes = getOldestLogString(userModeBuffer, pStack->Parameters.DeviceIoControl.OutputBufferLength);
     }
 
-    //This indicates how many bytes were copied.
+    
     Irp->IoStatus.Information = copiedBytes;
-	Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 
@@ -218,7 +217,6 @@ VOID deployNetworkMonitor(){
 
 		fwpmSession = ExAllocatePool(NonPagedPool, sizeof(FWPM_SESSION));
   		
-  		DbgPrint("1");
   		if(fwpmSession == NULL){
   			DbgPrint("deployNetworkMonitor's ExAllocatePool failed: failed to allocate memory for FWPM_SESSION\n");
   			return;  

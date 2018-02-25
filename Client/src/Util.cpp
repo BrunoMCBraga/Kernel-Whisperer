@@ -144,9 +144,9 @@ unsigned long long Util::getParentPid(unsigned long long pid){
 
 
 std::wstring Util::escapeSpecialCharacters(std::wstring wst){
-	
+
 	std::wstring tempString;
-    std::wregex backSlashRegex (std::wstring(L"\\\\"));
+	std::wregex backSlashRegex (std::wstring(L"\\\\"));
     std::wregex singleQuoteRegex (std::wstring(L"\'"));
     std::wregex doubleQuoteRegex (std::wstring(L"\""));
     
