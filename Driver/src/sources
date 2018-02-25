@@ -1,0 +1,14 @@
+TARGETNAME=KernelWhispererDriver
+TARGETTYPE=DRIVER
+TARGETPATH=..\bin
+LINKER_FLAGS=/integritycheck
+SRCFILES=KernelWhispererDriver.c FileSystemMonitor.c RegistryMonitor.c NetworkMonitor.c ProcessMonitor.c Util.c
+LIBFILES=..\lib\
+
+TARGETLIBS= $(TARGETLIBS) \
+			$(IFSKIT_LIB_PATH)\fltMgr.lib \
+			$(DDK_LIB_PATH)\fwpkclnt.lib
+			
+INCLUDES= $(LIBFILES)
+
+SOURCES=$(SRCFILES)

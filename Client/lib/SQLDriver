@@ -1,0 +1,36 @@
+#include <string>
+using namespace std; 
+
+#define DB_IP "192.168.20.135"
+#define DB_PORT 5000
+
+//MYSQL
+#define DB_INIT L"DROP DATABASE IF EXISTS Events; CREATE DATABASE IF NOT EXISTS Events; USE Events; CREATE TABLE Registry(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), RegKey VARCHAR(200), Value VARCHAR(200), Data VARCHAR(500), PRIMARY KEY(ID)); CREATE TABLE File(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), File VARCHAR(200), PRIMARY KEY(ID)); CREATE TABLE Network(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Protocol VARCHAR(6), Type VARCHAR(15), LocalIP VARCHAR(15), LocalPort INTEGER, RemoteIP VARCHAR(15), RemotePort INTEGER, PRIMARY KEY(ID));CREATE TABLE Process(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), CommandLine VARCHAR(200), PRIMARY KEY(ID));"
+
+#define FORMAT_DB_INSERT_REGISTRY_EVENT_FIRST L"Use Events; INSERT INTO Registry (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, RegKey, Value, Data) VALUES ("
+#define FORMAT_DB_INSERT_REGISTRY_EVENT_SECOND ");"
+
+#define FORMAT_DB_INSERT_FILE_EVENT_FIRST L"Use Events; INSERT INTO File (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, File) VALUES ("
+#define FORMAT_DB_INSERT_FILE_EVENT_SECOND ");"
+
+#define FORMAT_DB_INSERT_NETWORK_EVENT_FIRST L"Use Events; INSERT INTO Network (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol, Type, LocalIP, LocalPort, RemoteIP, RemotePort) VALUES ("
+#define FORMAT_DB_INSERT_NETWORK_EVENT_SECOND ");"
+
+#define FORMAT_DB_INSERT_PROCESS_EVENT_FIRST L"Use Events; INSERT INTO Process (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, CommandLine) VALUES ("
+#define FORMAT_DB_INSERT_PROCESS_EVENT_SECOND ");"
+
+
+class SQLDriver{
+
+    public:
+		int sendCommand(const wchar_t* command, size_t stringSize);
+		int initDB();
+		int insertRegistryEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring type, std::wstring key, std::wstring value, std::wstring data);
+		
+		int insertFileEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring type, std::wstring file);
+		
+		int insertNetworkEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring protocol, std::wstring type, std::wstring lIP, std::wstring lPort, std::wstring remoteIP, std::wstring remotePort);
+		
+		int insertProcessEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring commandLine);
+};
+

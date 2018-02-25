@@ -1,0 +1,16 @@
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std; 
+
+
+class LogParser{
+	
+	public:
+		static std::vector<std::wstring> parse(std::wstring logLine);
+	private:
+		static std::vector<std::wstring> parseRegistryLog(std::wstring logLine);
+		static std::vector<std::wstring> parseFileSystemLog(std::wstring logLine);
+		static std::vector<std::wstring> parseNetworkLog(std::wstring logLine);
+		static std::vector<std::wstring> LogParser::parseProcessLog(std::wstring logLine);
+};

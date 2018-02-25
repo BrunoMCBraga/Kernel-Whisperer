@@ -1,0 +1,99 @@
+;;;
+;;; Kernel Whisperer driver
+;;;
+;;;
+;;; Copyright (c) 1999 - 2001, Microsoft Corporation
+;;;
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = "ActivityMonitor"                         ;This is determined by the work this filter driver does
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}    ;This value is determined by the Class
+Provider    = %ProviderString%
+DriverVer   = 02/18/2018,1.0
+CatalogFile = KernelWhisperer.cat
+
+[Manufacturer]
+%Msft%          = Msft, NTx86.6.0, NTamd64.6.0
+
+[DestinationDirs]
+DefaultDestDir          = 12
+KernelWhisperer.DriverFiles  = 12            ;%windir%\system32\drivers
+
+;;
+;; Default install sections
+;;
+
+[DefaultInstall]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = KernelWhisperer.DriverFiles
+
+[DefaultInstall.Services]
+AddService          = %ServiceName%,,KernelWhisperer.Service
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles   = KernelWhisperer.DriverFiles
+
+[DefaultUninstall.Services]
+DelService = %ServiceName%,0x200      ;Ensure service is stopped before deleting
+
+;
+; Services Section
+;
+
+[KernelWhisperer.Service]
+DisplayName      = %ServiceName%
+Description      = %ServiceDescription%
+ServiceBinary    = %12%\%DriverName%.sys        ;%windir%\system32\drivers\
+Dependencies     = "FltMgr"
+ServiceType      = 2                            ;SERVICE_FILE_SYSTEM_DRIVER
+StartType        = 3                            ;SERVICE_DEMAND_START
+ErrorControl     = 1                            ;SERVICE_ERROR_NORMAL
+LoadOrderGroup   = "KernelWhisperer"
+AddReg           = KernelWhisperer.AddRegistry
+
+;
+; Registry Modifications
+;
+
+[KernelWhisperer.AddRegistry]
+HKR,,"DebugFlags",0x00010001 ,0x0
+HKR,,"SupportedFeatures",0x00010001,0x3
+HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
+HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
+HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
+
+;
+; Copy Files
+;
+
+[KernelWhisperer.DriverFiles]
+%DriverName%.sys
+
+[SourceDisksFiles]
+KernelWhispererDriver.sys = 1,,
+
+[SourceDisksNames]
+1 = %DiskId1%,,,
+
+;;
+;; String Section
+;;
+
+[Strings]
+Msft                    = "Microsoft"  
+ProviderString          = "Kernel Whisperer Driver"
+ServiceDescription      = "Kernel Whisperer Service"
+ServiceName             = "kernelwhispererdriver"
+DriverName              = "KernelWhispererDriver"
+DiskId1                 = "Kernel Whisperer Device Installation Disk"
+
+;Instances specific information.
+DefaultInstance         = "Kernel Whisperer Driver"
+Instance1.Name          = "Kernel Whisperer Driver"
+Instance1.Altitude      = "420000"
+Instance1.Flags         = 0x0              ; Allow all attachments

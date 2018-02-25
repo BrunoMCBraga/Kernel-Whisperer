@@ -1,0 +1,8 @@
+#include <string>
+#include <vector>
+
+using namespace std; 
+
+void sqlInsertProxy(std::vector<std::wstring> logComponents, DWORD currentPid);
+int main();
+

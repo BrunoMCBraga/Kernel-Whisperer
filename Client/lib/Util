@@ -1,0 +1,14 @@
+#include <iostream>
+#include <string>
+using namespace std; 
+
+
+class Util {
+	
+	public:
+		static std::wstring getImagePath(unsigned long long pid);
+		static unsigned long long getParentPid(unsigned long long pid);
+		static void setDebugPrivilege();
+		static std::wstring escapeSpecialCharacters(std::wstring wst);
+	
+};
