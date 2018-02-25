@@ -23,16 +23,16 @@ I have developed this tool as a means to collect kernel events in a way that cou
 	* Query Key and Value: these are commented since they are not relevant for me and are really noisy.
 
 ## How are the tables organized?
-* The database is called Events
+* The database is called Events.
 * There are four tables:
-	* File: ID,Timestamp,Hostname,PPid,PImageFilePath,Pid,ImageFilePath,Type,File
-	* Registry: ID,Timestamp,Hostname,PPid,PImageFilePath,Pid,ImageFilePath,Type,RegKey,Value,Data
-	* Network: ID,Timestamp,Hostname,PPid,PImageFilePath,Pid,ImageFilePath,Protocol,Type,LocalIP,LocalPort,RemoteIP,RemotePort,
-	* Process: ID,Timestamp,Hostname,PPid,PImageFilePath,Pid,ImageFilePath,CommandLine
+	* File: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, File
+	* Registry: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, RegKey, Value, Data
+	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol, Type, LocalIP, LocalPort, RemoteIP, RemotePort,
+	* Process: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, CommandLine
 
-The reason for an ID+Timestamp is simply because while the KeQuerySystemTime provides a high-precision timestamp, there are still collisions since events in jernel are high-volume.
+I am using the tuple ID+Timestamp to identify a record since KeQuerySystemTime does not provide a timestamp with enough precision to avoid collisions (i.e. events on the same table with the same timestamp).
 
-Currently, kernel Whisperer will drop any database called Events before starting the insertions. You can tune this behavior by adjusting the queries on Client->lib->SQLDriver (header and source file).
+** Note:** Currently, kernel Whisperer will drop any database called Events before starting the insertions. You can tune this behavior by adjusting the queries on Client->lib->SQLDriver (header and source file).
 
 
 ## Test environment
