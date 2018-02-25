@@ -102,7 +102,7 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 
 		logStringBuffer = ExAllocatePool(NonPagedPool, MAX_LOG_BUFFER_SIZE);
 		if (logStringBuffer == NULL){
-			DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->RegNtPreQueryValueKey->ExAllocatePool failed to allocate space for registry log.\n");
+			DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->ExAllocatePool failed to allocate space for registry log.\n");
 			return STATUS_UNSUCCESSFUL;
 		}
 
@@ -121,14 +121,14 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 				
 
 				if (registryPathBuffer == NULL){
-						DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->RegNtPreQueryValueKey->ExAllocatePool failed.");
+						DbgPrint("RegistryFilter->RegistryCallback->RegNtPreSetValueKey->ExAllocatePool failed.");
 						return STATUS_UNSUCCESSFUL;
 				}
 				RtlZeroMemory(registryPathBuffer,sizeof(UNICODE_STRING));
 			
 				ExtractKeyPath(((PREG_QUERY_KEY_INFORMATION)Argument2)->Object, registryPathBuffer);
 				if ((registryPathBuffer->Buffer == NULL) || (registryPathBuffer->Length == 0)){
-					DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryKey->RegNtPreQueryValueKey->ExtractKeyPath failed.");
+					DbgPrint("RegistryFilter->RegistryCallback->RegNtPreSetValueKey->ExtractKeyPath failed.");
 					ExFreePool(registryPathBuffer);
 					return STATUS_UNSUCCESSFUL;
 				}
@@ -157,16 +157,28 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 				break;
 				ExFreePool(registryPathBuffer);
 			case RegNtPreQueryValueKey:
-			/*TOO NOISY!
+
+			registryPathBuffer = (PUNICODE_STRING) ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
+			registryPathBuffer->Length = 0;
+			registryPathBuffer->MaximumLength = 0;
+			registryPathBuffer->Buffer = NULL;
+			
+
+			if (registryPathBuffer == NULL){
+					DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->ExAllocatePool failed.");
+					return STATUS_UNSUCCESSFUL;
+			}
+			RtlZeroMemory(registryPathBuffer,sizeof(UNICODE_STRING));
+
+
 			ExtractKeyPath(((PREG_QUERY_KEY_INFORMATION)Argument2)->Object, registryPathBuffer);
 			if ((registryPathBuffer->Buffer == NULL) || (registryPathBuffer->Length == 0)){
-				DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryKey->RegNtPreQueryValueKey->ExtractKeyPath failed.");
+				DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->ExtractKeyPath failed.");
 				ExFreePool(registryPathBuffer);
 				return STATUS_UNSUCCESSFUL;
 			}
 
 			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ<-->%wZ", L"REG", currentTime.QuadPart, processId, L"QUERYVALUE", registryPathBuffer, ((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName);
-			*/
 			break;
 			case RegNtDeleteValueKey:
 			break;
@@ -179,27 +191,29 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 			case RegNtEnumerateValueKey:
 			break;
 			case RegNtPreQueryKey:
-			/*TOO NOISY!
+
+
+			registryPathBuffer = (PUNICODE_STRING) ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
+			registryPathBuffer->Length = 0;
+			registryPathBuffer->MaximumLength = 0;
+			registryPathBuffer->Buffer = NULL;
+			
+
+			if (registryPathBuffer == NULL){
+					DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryValueKey->ExAllocatePool failed.");
+					return STATUS_UNSUCCESSFUL;
+			}
+			RtlZeroMemory(registryPathBuffer,sizeof(UNICODE_STRING));
+			
+
 			ExtractKeyPath(((PREG_QUERY_KEY_INFORMATION)Argument2)->Object, registryPathBuffer);
 			if ((registryPathBuffer->Buffer == NULL) || (registryPathBuffer->Length == 0)){
-				DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryKey->RegNtPreQueryValueKey->ExtractKeyPath failed.");
+				DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryKey->ExtractKeyPath failed.");
 				ExFreePool(registryPathBuffer);
 				return STATUS_UNSUCCESSFUL;
 			}
 			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ", L"REG", currentTime.QuadPart, processId, L"QUERYKEY", registryPathBuffer);
 
-			break;
-			case RegNtPreQueryValueKey:
-
-			ExtractKeyPath(((PREG_QUERY_KEY_INFORMATION)Argument2)->Object, registryPathBuffer);
-			if ((registryPathBuffer->Buffer == NULL) || (registryPathBuffer->Length == 0)){
-				DbgPrint("RegistryFilter->RegistryCallback->RegNtPreQueryKey->RegNtPreQueryValueKey->ExtractKeyPath failed.");
-				ExFreePool(registryPathBuffer);
-				return STATUS_UNSUCCESSFUL;
-			}
-
-			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ<-->%wZ", L"REG", currentTime.QuadPart, processId, L"QUERYVALUE", registryPathBuffer, ((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName);
-			*/
 			break;
 			case RegNtQueryMultipleValueKey:
 			break;

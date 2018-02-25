@@ -41,6 +41,8 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    char tempCommandChar;
 	    int wideCharToMultiByteResult;
 
+	    printf("INSERT:[%ls]\n", command);
+
 	    wideCharToMultiByteResult = WideCharToMultiByte(CP_UTF8, 0, command, -1, charBuffer, stringSize*sizeof(wchar_t), NULL, NULL);
 	    if(wideCharToMultiByteResult == 0){
 	    	switch (GetLastError()){
