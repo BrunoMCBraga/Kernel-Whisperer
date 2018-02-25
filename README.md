@@ -57,7 +57,7 @@ Kernel Whisperer has been tested with the following environment:
 
 
 ## Interaction with the database
- I am not leveraging any API to interact with the database. I wanted Kernel Whisperer to be versatile so that i could switch to any database with a couple of adjustments. As such, i am leveraging a Python server that reads queries and executes them directly on the OS through the command line. 
+ I am not leveraging any API to interact with the database. I wanted Kernel Whisperer to be versatile so that i could switch to any database with a couple of adjustments. As such, i have created a simple Python server that reads queries and executes them directly on the OS through the command line. 
 
 
 ## Ports, configurations and modules
