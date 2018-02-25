@@ -147,10 +147,10 @@ std::wstring Util::escapeSpecialCharacters(std::wstring wst){
 
 	std::wstring tempString;
 	std::wregex backSlashRegex (std::wstring(L"\\\\"));
-    std::wregex singleQuoteRegex (std::wstring(L"\'"));
+    std::wregex singleQuoteRegex (std::wstring(L"\\'"));
     std::wregex doubleQuoteRegex (std::wstring(L"\""));
     
-    tempString = std::regex_replace(std::regex_replace(std::regex_replace(wst, backSlashRegex, std::wstring(L"\\\\")),singleQuoteRegex, std::wstring(L"\'")),doubleQuoteRegex, std::wstring(L"\""));
+    tempString = std::regex_replace(std::regex_replace(std::regex_replace(wst, backSlashRegex, std::wstring(L"\\\\")),singleQuoteRegex, std::wstring(L"\\'")),doubleQuoteRegex, std::wstring(L"\\\""));
     return tempString;
 
 

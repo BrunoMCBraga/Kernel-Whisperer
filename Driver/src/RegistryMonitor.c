@@ -87,7 +87,7 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 		PUNICODE_STRING logString;
 		LARGE_INTEGER currentTime;
 
-		if((((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreSetValueKey) && (((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreCreateKeyEx)){
+		if((((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreSetValueKey) && (((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreCreateKeyEx) && (((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreQueryValueKey) && (((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreQueryKey) && (((int)((REG_NOTIFY_CLASS)Argument1)) != RegNtPreOpenKey)){
 			return;
 		}
 
@@ -142,10 +142,12 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 						tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ<-->%wZ<-->%p", L"REG", currentTime.QuadPart, processId, L"SETVALUE", registryPathBuffer, (((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->ValueName), (DWORD)((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->Data);
 						break;
 					case REG_EXPAND_SZ:
-						tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ<-->%wZ,<-->%ls", L"REG", currentTime.QuadPart, processId, L"SETVALUE", registryPathBuffer, (((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->ValueName), ((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->Data);						break;
+						tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ<-->%wZ,<-->%ls", L"REG", currentTime.QuadPart, processId, L"SETVALUE", registryPathBuffer, (((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->ValueName), ((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->Data);						
+						break;
 						break;
 					case REG_LINK:
-						tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ<-->%wZ,<-->%ls", L"REG", currentTime.QuadPart, processId, L"SETVALUE", registryPathBuffer, (((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->ValueName), ((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->Data);						break;
+						tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ<-->%wZ,<-->%ls", L"REG", currentTime.QuadPart, processId, L"SETVALUE", registryPathBuffer, (((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->ValueName), ((PREG_SET_VALUE_KEY_INFORMATION)Argument2)->Data);						
+						break;
 						break;
 					default:
 						ExFreePool(registryPathBuffer);
@@ -178,7 +180,10 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 				return STATUS_UNSUCCESSFUL;
 			}
 
-			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ<-->%wZ", L"REG", currentTime.QuadPart, processId, L"QUERYVALUE", registryPathBuffer, ((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName);
+			if ((((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName->Buffer == NULL) || (((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName->Length == 0))
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ<-->%ls", L"REG", currentTime.QuadPart, processId, L"QUERYVALUE", registryPathBuffer, L"");
+			else
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ<-->%wZ", L"REG", currentTime.QuadPart, processId, L"QUERYVALUE", registryPathBuffer, ((PREG_QUERY_VALUE_KEY_INFORMATION)Argument2)->ValueName);
 			break;
 			case RegNtDeleteValueKey:
 			break;
@@ -204,7 +209,6 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 					return STATUS_UNSUCCESSFUL;
 			}
 			RtlZeroMemory(registryPathBuffer,sizeof(UNICODE_STRING));
-			
 
 			ExtractKeyPath(((PREG_QUERY_KEY_INFORMATION)Argument2)->Object, registryPathBuffer);
 			if ((registryPathBuffer->Buffer == NULL) || (registryPathBuffer->Length == 0)){
@@ -218,9 +222,17 @@ NTSTATUS RegistryCallback(PVOID CallbackContext, PVOID Argument1, PVOID Argument
 			case RegNtQueryMultipleValueKey:
 			break;
 			case RegNtPreCreateKeyEx:
-			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ", L"REG", currentTime.QuadPart, processId, L"CREATEKEY", *(((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName));
+				if (((*(((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName)).Buffer == NULL) || ((*(((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName)).Length == 0))
+					tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%ls", L"REG", currentTime.QuadPart, processId, L"CREATEKEY", L"");
+				else
+					tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%ls<-->%wZ", L"REG", currentTime.QuadPart, processId, L"CREATEKEY", *(((PREG_CREATE_KEY_INFORMATION)Argument2)->CompleteName));
 			break;
+			//It seems that, according to https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_reg_pre_create_key_information, PREG_PRE_CREATE_KEY_INFORMATION is a pointer to both REG_PRE_CREATE_KEY_INFORMATION and REG_PRE_OPEN_KEY_INFORMATION.
 			case RegNtPreOpenKey:
+			if ((((PREG_PRE_CREATE_KEY_INFORMATION)Argument2)->CompleteName->Buffer == NULL) || (((PREG_PRE_CREATE_KEY_INFORMATION)Argument2)->CompleteName->Length == 0))
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%ls", L"REG", currentTime.QuadPart, processId, L"OPENKEY", L"");
+			else
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%lld<-->%lu<-->%ls<-->%wZ", L"REG", currentTime.QuadPart, processId, L"OPENKEY", ((PREG_PRE_CREATE_KEY_INFORMATION)Argument2)->CompleteName);
 			break;
 			default:
 			break;

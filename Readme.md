@@ -18,10 +18,11 @@ I have developed this tool as a means to collect kernel events in a way that cou
 	* ICMP outbound/inbound data
 * Process creation
 * Registry:
-	* Create Key
-	* Set Value
-	* Query Key 
-	* Query Value
+	* Create Key (RegCreateKey, RegCreateKeyEx)
+	* Set Value (RegSetValue, RegSetValueEx)
+	* Query Key metadata (RegQueryInfoKey) 
+	* Query Value (RegQueryValue, RegQueryValueEx)
+	* Open Key (RegOpenKey, RegOpenKeyEx)
 
 ## How are the tables organized?
 * The database is called Events.
