@@ -13,7 +13,7 @@ I have developed this tool as a means to collect kernel events in a way that cou
 * Filesystem:
 	* Created Files
 * Network:
-	* TCP: outbound/inbound connect/data, 
+	* TCP: outbound/inbound connect/data 
 	* UDP outbound/inbound data
 	* ICMP outbound/inbound data
 * Process creation
