@@ -27,9 +27,9 @@ I have developed this tool as a means to collect kernel events in a way that cou
 ## How are the tables organized?
 * The database is called Events.
 * There are four tables:
-	* File: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, File
-	* Registry: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, RegKey, Value, Data
-	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol, Type, LocalIP, LocalPort, RemoteIP, RemotePort,
+	* File: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type (FILE_CREATED, FILE_OPENED, FILE_OVERWRITTEN, FILE_SUPERSEDED, FILE_EXISTS, FILE_DOES_NOT_EXIST), File
+	* Registry: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type (CREATEKEY, OPENKEY, QUERYKEY, QUERYVALUE, SETVALUE, OPENKEY), RegKey, Value, Data
+	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol (TCP, UDP, ICMP, UNKNOWN), Type (CONNECT, RECV/ACCEPT, LISTEN), LocalIP, LocalPort, RemoteIP, RemotePort,
 	* Process: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, CommandLine
 
 I am using the tuple ID+Timestamp to identify a record since KeQuerySystemTime does not provide a timestamp with enough precision to avoid collisions (i.e. events on the same table with the same timestamp).
