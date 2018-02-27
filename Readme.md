@@ -23,6 +23,8 @@ I have developed this tool as a means to collect kernel events in a way that cou
 	* Query Key metadata (RegQueryInfoKey) 
 	* Query Value (RegQueryValue, RegQueryValueEx)
 	* Open Key (RegOpenKey, RegOpenKeyEx)
+	
+More events will be added to Kernel Whisperer as needed.
 
 ## How are the tables organized?
 * The database is called Events.
