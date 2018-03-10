@@ -5,7 +5,7 @@
 Kernel Whisperer encompasses three components:
 * Kernel module: captures events and creates internal strings with enough information to identify the sources of those events. The events are stored internally using a queue implemented using a linked list.
 * User-mode application: user-mode application that fetches event strings from the aforementioned queue and stores them on a database.
-* Database (SQL, Non-SQL, NewSQL, Graph): database where the kernel events are stored. 
+* Database (SQL, No-SQL, NewSQL, Graph): database where the kernel events are stored. 
 
 I have developed this tool as a means to collect kernel events in a way that could allow for mining, analytics, etc. 
 
