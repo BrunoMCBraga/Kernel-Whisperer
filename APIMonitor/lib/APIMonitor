@@ -1,0 +1,6 @@
+BOOL sendAPIEvent(wchar_t* apiEventString);
+BOOL WINAPI dWriteProcessMemory(HANDLE  hProcess, LPVOID  lpBaseAddress, LPCVOID lpBuffer,SIZE_T nSize, SIZE_T  *lpNumberOfBytesWritten);
+BOOL WINAPI dAdjustTokenPrivileges(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
+BOOL detoursAttach(PVOID* pointerToRealFunction, PVOID pointerToProxy);
+BOOL detoursDetach(PVOID* pointerToRealFunction, PVOID pointerToProxy);
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);

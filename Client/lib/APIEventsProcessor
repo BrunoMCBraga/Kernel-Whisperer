@@ -1,0 +1,9 @@
+class APIEventsProcessor{
+	
+	public:
+		static int run(DWORD currentPid, std::wstring hostNameWide);
+
+		
+
+
+};

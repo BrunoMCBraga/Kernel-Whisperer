@@ -1,0 +1,13 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <windows.h> 
+#include "sqldriver"
+using namespace std; 
+
+class KernelEventsProcessor{
+
+	public:
+		static int run(DWORD currentPid, std::wstring hostNameWide);
+	
+};
