@@ -121,7 +121,6 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    int wideCharToMultiByteResult;
 
 	    std::wcout << L"INSERT:[" << std::wstring(command) << L"]" << std::endl;
-	    return 1;
 
 	    wideCharToMultiByteResult = WideCharToMultiByte(CP_UTF8, 0, command, -1, charBuffer, stringSize*sizeof(wchar_t), NULL, NULL);
 	    if(wideCharToMultiByteResult == 0){
@@ -178,6 +177,7 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    	 std::cout << "SQLDriver->sendCommand->connect failed:" << std::hex << WSAGetLastError() << std::endl;
 	         closesocket(ConnectSocket);
 	         ConnectSocket = INVALID_SOCKET; 
+	         return 1;
 	    }
 
 
