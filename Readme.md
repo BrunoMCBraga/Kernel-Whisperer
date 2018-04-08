@@ -5,7 +5,7 @@
 Kernel Whisperer encompasses three components:
 * Kernel module: captures events and creates internal strings with enough information to identify the sources of those events. The events are stored internally using a queue implemented using a linked list.
 * User-mode application: user-mode application that fetches event strings from the aforementioned queue and stores them on a database.
-* Database (SQL, Non-SQL, NewSQL, Graph): database where the kernel events are stored. 
+* Database (SQL, No-SQL, NewSQL, Graph): database where the kernel events are stored. 
 
 I have developed this tool as a means to collect kernel events in a way that could allow for mining, analytics, etc. 
 
@@ -16,20 +16,22 @@ I have developed this tool as a means to collect kernel events in a way that cou
 	* TCP: outbound/inbound connect/data 
 	* UDP outbound/inbound data
 	* ICMP outbound/inbound data
-* Process creation
+* Process creation/termination
 * Registry:
 	* Create Key (RegCreateKey, RegCreateKeyEx)
 	* Set Value (RegSetValue, RegSetValueEx)
 	* Query Key metadata (RegQueryInfoKey) 
 	* Query Value (RegQueryValue, RegQueryValueEx)
 	* Open Key (RegOpenKey, RegOpenKeyEx)
+	
+More events will be added to Kernel Whisperer as needed.
 
 ## How are the tables organized?
 * The database is called Events.
 * There are four tables:
-	* File: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, File
-	* Registry: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, RegKey, Value, Data
-	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol, Type, LocalIP, LocalPort, RemoteIP, RemotePort,
+	* File: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type (FILE_CREATED, FILE_OPENED, FILE_OVERWRITTEN, FILE_SUPERSEDED, FILE_EXISTS, FILE_DOES_NOT_EXIST), File
+	* Registry: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type (CREATEKEY, OPENKEY, QUERYKEY, QUERYVALUE, SETVALUE, OPENKEY), RegKey, Value, Data
+	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol (TCP, UDP, ICMP, UNKNOWN), Type (CONNECT, RECV/ACCEPT, LISTEN), LocalIP, LocalPort, RemoteIP, RemotePort,
 	* Process: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, CommandLine
 
 I am using the tuple ID+Timestamp to identify a record since KeQuerySystemTime does not provide a timestamp with enough precision to avoid collisions (i.e. events on the same table with the same timestamp).
