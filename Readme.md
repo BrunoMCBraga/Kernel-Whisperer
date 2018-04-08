@@ -16,7 +16,7 @@ I have developed this tool as a means to collect kernel events in a way that cou
 	* TCP: outbound/inbound connect/data 
 	* UDP outbound/inbound data
 	* ICMP outbound/inbound data
-* Process creation
+* Process creation/termination
 * Registry:
 	* Create Key (RegCreateKey, RegCreateKeyEx)
 	* Set Value (RegSetValue, RegSetValueEx)
