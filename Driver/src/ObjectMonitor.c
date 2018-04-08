@@ -83,8 +83,6 @@ void PobPostOperationCallbackProcess(PVOID RegistrationContext, POB_POST_OPERATI
 	LARGE_INTEGER currentTime;
 	wchar_t* permissionsArray;
 
-	DbgPrint("PobPostOperationCallbackProcess called.\n");
-
 	KeQuerySystemTime(&currentTime);
 
 	processId = PsGetCurrentProcessId();
@@ -143,17 +141,12 @@ void PobPostOperationCallbackProcess(PVOID RegistrationContext, POB_POST_OPERATI
 	}
 	
 	addNode(logString);
-	RtlFreeUnicodeString(logString);
-
-
-		
 	return STATUS_SUCCESS;
 
 }
 
 OB_PREOP_CALLBACK_STATUS PobPreOperationCallbackThread(PVOID RegistrationContext, POB_PRE_OPERATION_INFORMATION OperationInformation){
 
-	DbgPrint("PobPreOperationCallbackThread called.\n");
 	return OB_PREOP_SUCCESS;
 
 }
@@ -225,11 +218,7 @@ void PobPostOperationCallbackThread(PVOID RegistrationContext, POB_POST_OPERATIO
 		return STATUS_UNSUCCESSFUL;
 	}
 	
-	addNode(logString);
-	RtlFreeUnicodeString(logString);
-
-
-		
+	addNode(logString);		
 	return STATUS_SUCCESS;
 
 }

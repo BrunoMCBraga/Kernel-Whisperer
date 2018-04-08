@@ -151,7 +151,7 @@ VOID NTAPI FwpsCalloutClassifyFn(const FWPS_INCOMING_VALUES *inFixedValues, cons
     	}
 
     	addNode(logString);
-    	RtlFreeUnicodeString(logString);
+
     	if (localIPAddress != NULL)
     		ExFreePool(localIPAddress);
     	if(remoteIPAddress != NULL)

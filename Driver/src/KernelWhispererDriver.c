@@ -207,13 +207,11 @@ VOID deployNetworkMonitor(){
 
 		NTSTATUS tempStatus;
 
-		FWPM_SESSION* fwpmSession;
-
+		FWPM_SESSION fwpmSession = {'\0'};
 
 		FWPS_CALLOUT* fwpsListenCallout;
 		FWPS_CALLOUT* fwpsRecvAcceptCallout;
-		FWPS_CALLOUT* fwpsConnectCallout;
-		
+		FWPS_CALLOUT* fwpsConnectCallout;		
 
 		FWPM_CALLOUT* fwpmListenCallout;
 		FWPM_CALLOUT* fwpmRecvAcceptCallout;
@@ -223,22 +221,13 @@ VOID deployNetworkMonitor(){
 		FWPM_FILTER* fwpmRecvAcceptFilter;
 		FWPM_FILTER* fwpmConnectFilter;	
 
-		fwpmSession = ExAllocatePool(NonPagedPool, sizeof(FWPM_SESSION));
-  		
-  		if(fwpmSession == NULL){
-  			DbgPrint("deployNetworkMonitor's ExAllocatePool failed: failed to allocate memory for FWPM_SESSION\n");
-  			return;  
-  		}
-
-  		RtlZeroMemory(fwpmSession, sizeof(FWPM_SESSION));
-    	
+		    	
     	//fwpmSession->flags = FWPM_SESSION_FLAG_DYNAMIC;  triggers c022000b STATUS_FWP_DYNAMIC_SESSION_IN_PROGRESS on FwpmCalloutAdd 
-    	tempStatus = FwpmEngineOpen(NULL, RPC_C_AUTHN_WINNT, NULL, fwpmSession, &engineHandle);
+    	tempStatus = FwpmEngineOpen(NULL, RPC_C_AUTHN_WINNT, NULL, &fwpmSession, &engineHandle);
 
     	if(engineHandle == NULL)
     	{
     		DbgPrint("deployNetworkMonitor's FwpmEngineOpen failed.");
-   			ExFreePool(fwpmSession);
    			return;
     	}
 
@@ -252,7 +241,6 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmEngineOpen failed: failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
 	    	return;
     	}
 
@@ -260,7 +248,7 @@ VOID deployNetworkMonitor(){
 
     	if(!NT_SUCCESS(tempStatus)){
 	    	DbgPrint("deployNetworkMonitor's FwpmTransactionBegin failed: failed:%p\n", tempStatus);
-	    	ExFreePool(fwpmSession);
+	    	
 	    	return;
     	}
 
@@ -270,11 +258,10 @@ VOID deployNetworkMonitor(){
 		fwpsRecvAcceptCallout = getFWPSRecvAcceptCallout();
 		fwpsConnectCallout =  getFWPSConnectCallout();
 
-		
-
+	
 		if(fwpsListenCallout == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPS_Callout failed: fwpsListenCallout null");
-   			ExFreePool(fwpmSession);
+   			
    			return;
 
 		} 
@@ -290,7 +277,7 @@ VOID deployNetworkMonitor(){
 			DbgPrint("deployNetworkMonitor's getFWPS_Callout failed: fwpsConnectCallout null");
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
-   			ExFreePool(fwpmSession);
+   			
    			return;
 
 		} 	
@@ -305,7 +292,6 @@ VOID deployNetworkMonitor(){
 	    	ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-	    	ExFreePool(fwpmSession);
 	    	return;
     	}
 
@@ -319,7 +305,6 @@ VOID deployNetworkMonitor(){
 	    	ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-	    	ExFreePool(fwpmSession);
 	    	return;
     	}
 
@@ -333,7 +318,6 @@ VOID deployNetworkMonitor(){
 	    	ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-	    	ExFreePool(fwpmSession);
 	    	return;
     	}
   	
@@ -344,9 +328,6 @@ VOID deployNetworkMonitor(){
 
 		if(fwpmListenCallout == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmListenCallout is null.");
-   			
-   			ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
@@ -357,12 +338,11 @@ VOID deployNetworkMonitor(){
 		if(fwpmRecvAcceptCallout == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmListenCallout is null.");
    			
-   			ExFreePool(fwpmSession);
+   			
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
    			return;
 
@@ -371,12 +351,11 @@ VOID deployNetworkMonitor(){
 		if(fwpmConnectCallout == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmListenCallout is null.");
    			
-   			ExFreePool(fwpmSession);
+   			
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
    			return;
@@ -390,12 +369,11 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmCalloutAdd failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
+	    	
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
@@ -410,12 +388,11 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmCalloutAdd failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
+	    	
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
@@ -430,13 +407,9 @@ VOID deployNetworkMonitor(){
 	    		DbgPrint("deployNetworkMonitor's FwpmCalloutAdd failed: FWP_E_INVALID_PARAMETER\n");  
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmCalloutAdd failed:%p\n", tempStatus);
-	    	
-	    	ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
@@ -450,56 +423,39 @@ VOID deployNetworkMonitor(){
 
 		if(fwpmListenFilter == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmListenFilter is null.");
-   			
-   			ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
    			return;
 
 		}
 
 		if(fwpmRecvAcceptFilter == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmRecvAcceptFilter is null.");
-   			
-   			ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
 			ExFreePool(fwpmListenFilter);
-
    			return;
 
 		}
 
 		if(fwpmConnectFilter == NULL){
 			DbgPrint("deployNetworkMonitor's getFWPM_Callout failed: fwpmConnectFilter is null.");
-   			
-   			ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
 			ExFreePool(fwpmListenFilter);
 			ExFreePool(fwpmRecvAcceptFilter);
-
    			return;
 
 		}   
@@ -513,17 +469,12 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmFilterAdd failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
-   			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
-
 			ExFreePool(fwpmListenFilter);
 			ExFreePool(fwpmRecvAcceptFilter);
 			ExFreePool(fwpmConnectFilter);
@@ -541,16 +492,13 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmFilterAdd failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
 			ExFreePool(fwpmListenFilter);
 			ExFreePool(fwpmRecvAcceptFilter);
 			ExFreePool(fwpmConnectFilter);
@@ -568,16 +516,13 @@ VOID deployNetworkMonitor(){
 	    	else
 	    		DbgPrint("deployNetworkMonitor's FwpmFilterAdd failed:%p\n", tempStatus);
 	    	
-	    	ExFreePool(fwpmSession);
    			
    			ExFreePool(fwpsListenCallout);
 			ExFreePool(fwpsRecvAcceptCallout);
 			ExFreePool(fwpsConnectCallout);
-
 			ExFreePool(fwpmListenCallout);
 			ExFreePool(fwpmRecvAcceptCallout);
 			ExFreePool(fwpmConnectCallout);
-
 			ExFreePool(fwpmListenFilter);
 			ExFreePool(fwpmRecvAcceptFilter);
 			ExFreePool(fwpmConnectFilter);
@@ -599,17 +544,13 @@ VOID deployNetworkMonitor(){
 		    		DbgPrint("deployNetworkMonitor's FwpmTransactionAbort failed: STATUS_FWP_ALREADY_EXISTS\n");	 
 		    	else
 		    		DbgPrint("deployNetworkMonitor's FwpmTransactionAbort failed:%p\n", tempStatus);
-
-				ExFreePool(fwpmSession);
    			
 	   			ExFreePool(fwpsListenCallout);
 				ExFreePool(fwpsRecvAcceptCallout);
 				ExFreePool(fwpsConnectCallout);
-
 				ExFreePool(fwpmListenCallout);
 				ExFreePool(fwpmRecvAcceptCallout);
 				ExFreePool(fwpmConnectCallout);
-
 				ExFreePool(fwpmListenFilter);
 				ExFreePool(fwpmRecvAcceptFilter);
 				ExFreePool(fwpmConnectFilter);
@@ -810,6 +751,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    			}
 
    		}
+
    		initSyncObject();
 
    		/*
@@ -826,6 +768,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    		deployProcessMonitor();
    		deployObjectMonitor();
    		deployImageLoadMonitor();
+   	
    		return STATUS_SUCCESS;
 
 		

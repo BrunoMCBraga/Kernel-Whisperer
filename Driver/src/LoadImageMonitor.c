@@ -71,11 +71,7 @@ void PloadImageNotifyRoutine(PUNICODE_STRING FullImageName, HANDLE ProcessId, PI
 		return;
 	}
 	
-	addNode(logString);
-	RtlFreeUnicodeString(logString);
-
-
-		
+	addNode(logString);		
 	return STATUS_SUCCESS;
 
 

@@ -25,7 +25,7 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
 	ULONG processId = 0;
 	PVOID logStringBuffer;
 	PUNICODE_STRING logString; 
-	PUNICODE_STRING volumeName;
+	UNICODE_STRING volumeName = {'\0'};
 	VOID* volumeNameBuffer;
 	ULONG volumeBytesReturned;
 	LARGE_INTEGER currentTime;
@@ -75,15 +75,6 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
 
 		RtlZeroMemory(logStringBuffer, MAX_LOG_BUFFER_SIZE);
 
-		volumeName = ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
-		if (volumeName == NULL){
-			DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->ExAllocatePool failed to allocate space for volume name unicode string.\n");
-			ExFreePool(logStringBuffer);
-			return FLT_POSTOP_FINISHED_PROCESSING;
-		}
-
-		RtlZeroMemory(volumeName, sizeof(UNICODE_STRING));
-
 		volumeNameBuffer = ExAllocatePool(NonPagedPool, VOLUME_INFORMATION_SIZE);
 
 		if (volumeNameBuffer == NULL){
@@ -93,11 +84,11 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
 		}
 
 		RtlZeroMemory(volumeNameBuffer, VOLUME_INFORMATION_SIZE);
-		volumeName->Buffer = volumeNameBuffer;
-		volumeName->Length = 0;
-		volumeName->MaximumLength = VOLUME_INFORMATION_SIZE;
+		volumeName.Buffer = volumeNameBuffer;
+		volumeName.Length = 0;
+		volumeName.MaximumLength = VOLUME_INFORMATION_SIZE;
 
-		tempStatus = FltGetVolumeName(FltObjects->Volume, volumeName, &volumeBytesReturned);
+		tempStatus = FltGetVolumeName(FltObjects->Volume, &volumeName, &volumeBytesReturned);
 		if(!NT_SUCCESS(tempStatus)){
 			if (tempStatus == STATUS_INVALID_PARAMETER){
 	    		DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->FltGetVolumeName: STATUS_BUFFER_OVERFLOW\n"); 
@@ -106,7 +97,7 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
 	    		DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->FltGetVolumeName: STATUS_INVALID_PARAMETER\n"); 
 	    	}
 	    	ExFreePool(logStringBuffer);
-	    	RtlFreeUnicodeString(volumeName);
+	    	
 	    	return FLT_POSTOP_FINISHED_PROCESSING;
     	}
 
@@ -118,12 +109,12 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
     	if((FltObjects->FileObject->FileName.Length > 2) && (hasInvalidCharacters(&(FltObjects->FileObject->FileName)) == 0)){//dword should have at least 2 bytes...
 
     		if(FltObjects->FileObject->FileName.Buffer[0] == L'\\')
-    			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, volumeName, FltObjects->FileObject->FileName);
+    			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, &volumeName, FltObjects->FileObject->FileName);
 			else
-		 		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ\\%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, volumeName, FltObjects->FileObject->FileName);
+		 		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ\\%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, &volumeName, FltObjects->FileObject->FileName);
 		}
 		else 
-			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, volumeName);
+			tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%lu<-->%s<-->%wZ", L"FILE", currentTime.QuadPart, processId, operationResult, &volumeName);
 		
 
 		if(!NT_SUCCESS(tempStatus)){
@@ -134,7 +125,7 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
 	    		DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->RtlStringCbPrintfW failed to generate log string: STATUS_INVALID_PARAMETER\n"); 
 	    	}
 	    	ExFreePool(logStringBuffer);
-	    	RtlFreeUnicodeString(volumeName);
+	    	
 	    	return FLT_POSTOP_FINISHED_PROCESSING;
     	}
 
@@ -142,7 +133,7 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
     	if(logString == NULL){
     		DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->ExAllocatePool failed to allocate memory for log string.\n");
     		ExFreePool(logStringBuffer);
-	    	RtlFreeUnicodeString(volumeName);
+	    	
 	    	return FLT_POSTOP_FINISHED_PROCESSING;
     	}
     	RtlZeroMemory(logString, sizeof(UNICODE_STRING));
@@ -152,13 +143,11 @@ FLT_POSTOP_CALLBACK_STATUS FileSystemFilterPostOperationCallback (PFLT_CALLBACK_
     		DbgPrint("FileSystemFilter->FileSystemFilterPostOperationCallback->RtlInitUnicodeString failed to create unicode string.\n"); 
 	    	ExFreePool(logStringBuffer);
 	    	ExFreePool(logString);
-	    	RtlFreeUnicodeString(volumeName);
+	    	
     		return FLT_POSTOP_FINISHED_PROCESSING;
     	}
     	addNode(logString);
-	   	RtlFreeUnicodeString(volumeName);
-    	RtlFreeUnicodeString(logString);
-
+	   	
 	}
 
 	return FLT_POSTOP_FINISHED_PROCESSING;

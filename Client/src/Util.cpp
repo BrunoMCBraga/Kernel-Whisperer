@@ -2,6 +2,7 @@
 #include <tlhelp32.h>
 #include <psapi.h> 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <tchar.h>
 #include <cstdlib>
@@ -20,59 +21,50 @@ void Util::setDebugPrivilege(){
 	TOKEN_PRIVILEGES tp;
     LUID luid;
     HANDLE tokenHandle;
+    std::ostringstream errorStringStream;
 
     if(!OpenProcessToken(GetCurrentProcess(),TOKEN_READ|TOKEN_WRITE,&tokenHandle)){
     	std::cout << "Util->setDebugPrivilege->OpenProcessToken failed:" << std::hex << GetLastError() << std::endl;
     	return;
     }
 
-    if ( !LookupPrivilegeValue( 
-            NULL,            // lookup privilege on local system
-            SE_DEBUG_NAME,   // privilege to lookup 
-            &luid ) )        // receives LUID of privilege
+    if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid ))        // receives LUID of privilege
     {
-        printf("LookupPrivilegeValue error: %u\n", GetLastError() ); 
-        return;// FALSE; 
+        errorStringStream << "Util->setDebugPrivilege->LookupPrivilegeValue failed:" << std::hex << GetLastError();
+        std::cout << errorStringStream.str() << std::endl;
+        return;
     }
 
     tp.PrivilegeCount = 1;
     tp.Privileges[0].Luid = luid;
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    // Enable the privilege or disable all privileges.
-
-    if ( !AdjustTokenPrivileges(
-           tokenHandle, 
-           FALSE, 
-           &tp, 
-           sizeof(TOKEN_PRIVILEGES), 
-           (PTOKEN_PRIVILEGES) NULL, 
-           (PDWORD) NULL) )
-    { 
-          printf("AdjustTokenPrivileges error: %u\n", GetLastError() ); 
-          return;// FALSE; 
+   
+    if ( !AdjustTokenPrivileges(tokenHandle, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES) NULL, (PDWORD) NULL) )
+    { 		
+    	  errorStringStream << "Util->setDebugPrivilege->AdjustTokenPrivileges failed:" << std::hex << GetLastError();
+          std::cout << errorStringStream.str() << std::endl;
+          return; 
     } 
 
     if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
-
-    {
-          printf("The token does not have the specified privilege. \n");
-          return;// FALSE;
+    {		
+    	  std::cout << "Util->setDebugPrivilege failed: the token does not have the specified privilege." << std::endl;
+          return;
     } 
-
-    //return TRUE;
 
 }
 
 std::wstring Util::getImagePath(unsigned long long pid){
 
 	  HANDLE processHandle = NULL;
-	  char imageFilePath[MAX_PATH_LENGTH] = {0};
+	  char imageFilePath[MAX_PATH_LENGTH] = {'\0'};
 	  wchar_t imageFilePathWide[MAX_PATH_LENGTH_WIDE] = {L'\0'};
 	  std::wstring defaultString = std::wstring(L"");
 	  DWORD sizeOfBuffer = MAX_PATH_LENGTH;
+	  std::ostringstream imageFilePathStringStream;
 
-	  if(pid == 0)
-	  	return defaultString;
+    if(pid == 0)
+	  return defaultString;
 
 	
 	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
@@ -88,9 +80,8 @@ std::wstring Util::getImagePath(unsigned long long pid){
 		return std::wstring(imageFilePathWide); 	
 	}
 
-
-	_stprintf(imageFilePath, "%s", imageFilePath);
-	mbstowcs(imageFilePathWide, imageFilePath, MAX_PATH_LENGTH_WIDE);
+	imageFilePathStringStream << std::string(imageFilePath);
+	mbstowcs(imageFilePathWide, imageFilePathStringStream.str().c_str(), MAX_PATH_LENGTH_WIDE);
 	
 	CloseHandle(processHandle);
 	return std::wstring(imageFilePathWide); 

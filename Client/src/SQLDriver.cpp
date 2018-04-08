@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "util"
 #include "sqldriver"
 
 using namespace std;
@@ -24,6 +25,84 @@ static long regEntries = 0;
 static long fileEntries = 0;
 static long networkEntries = 0;
 static long processEntries = 0;
+static long objectEntries = 0;
+static long imageLoadEntries = 0;
+static long apiEntries = 0;
+
+SQLDriver* SQLDriver::sqlDriverInstance = NULL;
+
+SQLDriver::SQLDriver(){}
+
+SQLDriver* SQLDriver::getInstance(){
+
+	if(sqlDriverInstance == NULL)
+		sqlDriverInstance = new SQLDriver();
+	return sqlDriverInstance;
+}
+
+
+void SQLDriver::sqlInsertProxy(std::vector<std::wstring> logComponents, DWORD currentPid, std::wstring hostname){
+
+  unsigned long long parentPid;
+  std::wstring pImagePath;
+  std::wstring imagePath;
+  
+  unsigned long long tempPid;
+  std::wstring tempImagePath; //This string will contain the path for the process associated with either the thread id or pid associated with the open handle.
+
+
+  if(logComponents.size() == 0)
+    return;
+
+  
+  
+  if(currentPid == stoull(logComponents[2], NULL, 0))
+    return;
+
+  parentPid = (stoull(logComponents[2]) != 0) ? Util::getParentPid(stoull(logComponents[2])) : 0;
+  pImagePath = (parentPid != 0) ? Util::escapeSpecialCharacters(Util::getImagePath(parentPid)) : std::wstring(L"");
+  imagePath = (stoull(logComponents[2], NULL, 0) != 0) ? Util::escapeSpecialCharacters(Util::getImagePath(stoull(logComponents[2], NULL, 0))) : std::wstring(L"");
+  //MAKE SURE THAT THE NUMBER OF PARAMETERS IS CORRECT. ADD ANOTHER ELEMENT TO IF.
+  if(logComponents[0].compare(std::wstring(L"REG")) == 0){
+    if (logComponents[3].compare(std::wstring(L"CREATEKEY")) == 0){
+      (SQLDriver::getInstance())->insertRegistryEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath,  logComponents[3], logComponents[4], std::wstring(L""), std::wstring(L""));
+    }
+    else if (logComponents[3].compare(std::wstring(L"SETVALUE")) == 0){
+      (SQLDriver::getInstance())->insertRegistryEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3], logComponents[4], logComponents[5], logComponents[6]);  
+    }
+  }
+  else if(logComponents[0].compare(std::wstring(L"FILE")) == 0){
+    (SQLDriver::getInstance())->insertFileEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3], logComponents[4]);
+  }
+  else if(logComponents[0].compare(std::wstring(L"NET")) == 0){
+    (SQLDriver::getInstance())->insertNetworkEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3], logComponents[4], logComponents[5], logComponents[6], logComponents[7], logComponents[8]);
+  }
+  else if(logComponents[0].compare(std::wstring(L"PROC")) == 0){
+    (SQLDriver::getInstance())->insertProcessEvent(logComponents[1], hostname, logComponents[3], pImagePath, logComponents[2], Util::escapeSpecialCharacters(logComponents[4]), Util::escapeSpecialCharacters(logComponents[5]));
+  }
+
+  else if(logComponents[0].compare(std::wstring(L"OBJECT")) == 0){
+    tempPid = stoull(logComponents[4]);
+    tempImagePath = (tempPid != 0) ? Util::escapeSpecialCharacters(Util::getImagePath(tempPid)) : std::wstring(L"");
+    (SQLDriver::getInstance())->insertObjectEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[4],  tempImagePath, logComponents[3], logComponents[5], logComponents[6]);
+  }
+
+  else if(logComponents[0].compare(std::wstring(L"LOADIMAGE")) == 0){
+    tempPid = stoull(logComponents[3]);
+    tempImagePath = (tempPid != 0) ? Util::escapeSpecialCharacters(Util::getImagePath(tempPid)) : std::wstring(L"");
+    (SQLDriver::getInstance())->insertLoadImageEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3],  tempImagePath, logComponents[4]);
+  }
+
+  else if(logComponents[0].compare(std::wstring(L"API")) == 0){
+    (SQLDriver::getInstance())->insertAPIEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3]);
+  }
+
+  else{
+    std::wcout << L"Main->sqlInsertProxy failed: Unknown Log Tag (" << logComponents[0] << L")." << std::endl;
+  }
+}
+
+
 
 int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 
@@ -41,7 +120,8 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    char tempCommandChar;
 	    int wideCharToMultiByteResult;
 
-	    printf("INSERT:[%ls]\n", command);
+	    std::wcout << L"INSERT:[" << std::wstring(command) << L"]" << std::endl;
+	    return 1;
 
 	    wideCharToMultiByteResult = WideCharToMultiByte(CP_UTF8, 0, command, -1, charBuffer, stringSize*sizeof(wchar_t), NULL, NULL);
 	    if(wideCharToMultiByteResult == 0){
@@ -132,11 +212,14 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 
 	    closesocket(ConnectSocket);
 	    WSACleanup();
-	    printf("Response:%s\n",recvbuf);
-	    printf("FileEntries:%d\n", fileEntries);
-	    printf("RegEntries:%d\n", regEntries);
-	    printf("NetworkEntries:%d\n", networkEntries);
-	    printf("ProcessEntries:%d\n", processEntries);
+	    std::cout << "Response:" << std::string(recvbuf) << std::endl;
+	    std::cout << "FileEntries:" << fileEntries << std::endl;
+	    std::cout << "RegEntries:" << regEntries << std::endl; 
+	    std::cout << "NetworkEntries:" << networkEntries << std::endl; 
+	    std::cout << "ProcessEntries:" << processEntries << std::endl;
+	    std::cout << "ObjectEntries:" << processEntries << std::endl;
+	    std::cout << "ImageLoadEntries:" << imageLoadEntries << std::endl;
+	    std::cout << "ImageLoadEntries:" << apiEntries << std::endl;
 	    free(charBuffer);
 	    return 0;
 
@@ -199,4 +282,37 @@ int SQLDriver::insertProcessEvent(std::wstring timestamp, std::wstring hostname,
 
 }
 
+
+int SQLDriver::insertObjectEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring objPid, std::wstring objImageFilePath, std::wstring objType, std::wstring handleOperation, std::wstring permissions){
+	
+	std::wstringstream queryStringStream;
+	queryStringStream << FORMAT_DB_INSERT_OBJECT_EVENT_FIRST << timestamp << L',' << L'\'' << hostname << L'\'' << L',' << ppid <<  L',' << L'\'' << pImageFilePath << L'\'' << L',' << pid << L',' << L'\'' << imageFilePath << L'\'' << L',' << objPid << L',' << L'\'' << objImageFilePath << L'\'' << L',' << L'\'' << objType << L'\'' << L',' << L'\'' << handleOperation << L'\'' << L',' << L'\'' << permissions << L'\'' << FORMAT_DB_INSERT_OBJECT_EVENT_SECOND;
+	std::wstring finalString = queryStringStream.str();
+	objectEntries+=1;
+	
+	return sendCommand(finalString.c_str(), finalString.length());	
+
+}
+
+
+int SQLDriver::insertLoadImageEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring hostProcessPid, std::wstring hostProcessImageFilePath, std::wstring loadedImage){
+
+	std::wstringstream queryStringStream;
+	queryStringStream << FORMAT_DB_INSERT_LOAD_IMAGE_EVENT_FIRST << timestamp << L',' << L'\'' << hostname << L'\'' << L',' << ppid <<  L',' << L'\'' << pImageFilePath << L'\'' << L',' << pid << L',' << L'\'' << imageFilePath << L'\'' << L',' << hostProcessPid << L',' << L'\'' << hostProcessImageFilePath << L'\'' << L',' << L'\'' << loadedImage << L'\'' <<  FORMAT_DB_INSERT_LOAD_IMAGE_EVENT_SECOND;
+	std::wstring finalString = queryStringStream.str();
+	imageLoadEntries+=1;
+	
+	return sendCommand(finalString.c_str(), finalString.length());
+}
+
+int SQLDriver::insertAPIEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring function){
+
+	std::wstringstream queryStringStream;
+	queryStringStream << FORMAT_DB_INSERT_API_EVENT_FIRST << timestamp << L',' << L'\'' << hostname << L'\'' << L',' << ppid <<  L',' << L'\'' << pImageFilePath << L'\'' << L',' << pid <<  L',' << L'\'' << imageFilePath << L'\'' << L',' << L'\'' << function << L'\'' << FORMAT_DB_INSERT_API_EVENT_SECOND;
+	std::wstring finalString = queryStringStream.str();
+	apiEntries+=1;
+	
+	return sendCommand(finalString.c_str(), finalString.length());
+
+}
 

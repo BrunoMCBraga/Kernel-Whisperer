@@ -2,7 +2,7 @@ TARGETNAME=KernelWhispererDriver
 TARGETTYPE=DRIVER
 TARGETPATH=..\bin
 LINKER_FLAGS=/integritycheck
-SRCFILES=KernelWhispererDriver.c FileSystemMonitor.c RegistryMonitor.c NetworkMonitor.c ProcessMonitor.c Util.c
+SRCFILES=KernelWhispererDriver.c FileSystemMonitor.c RegistryMonitor.c NetworkMonitor.c ProcessMonitor.c Util.c ObjectMonitor.c LoadImageMonitor.c
 LIBFILES=..\lib\
 
 TARGETLIBS= $(TARGETLIBS) \

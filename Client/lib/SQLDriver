@@ -1,3 +1,5 @@
+#include <vector>
+#include <windows.h>
 #include <string>
 using namespace std; 
 
@@ -5,7 +7,7 @@ using namespace std;
 #define DB_PORT 5000
 
 //MYSQL
-#define DB_INIT L"DROP DATABASE IF EXISTS Events; CREATE DATABASE IF NOT EXISTS Events; USE Events; CREATE TABLE Registry(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), RegKey VARCHAR(200), Value VARCHAR(200), Data VARCHAR(500), PRIMARY KEY(ID)); CREATE TABLE File(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), File VARCHAR(200), PRIMARY KEY(ID)); CREATE TABLE Network(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Protocol VARCHAR(6), Type VARCHAR(15), LocalIP VARCHAR(15), LocalPort INTEGER, RemoteIP VARCHAR(15), RemotePort INTEGER, PRIMARY KEY(ID));CREATE TABLE Process(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), CommandLine VARCHAR(200), PRIMARY KEY(ID));"
+#define DB_INIT L"DROP DATABASE IF EXISTS Events; CREATE DATABASE IF NOT EXISTS Events; USE Events; CREATE TABLE Registry(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), RegKey VARCHAR(200), Value VARCHAR(200), Data VARCHAR(500), PRIMARY KEY(ID)); CREATE TABLE File(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Type VARCHAR(30), File VARCHAR(200), PRIMARY KEY(ID)); CREATE TABLE Network(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Protocol VARCHAR(6), Type VARCHAR(15), LocalIP VARCHAR(15), LocalPort INTEGER, RemoteIP VARCHAR(15), RemotePort INTEGER, PRIMARY KEY(ID));CREATE TABLE Process(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), CommandLine VARCHAR(200), PRIMARY KEY(ID));CREATE TABLE Objects(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), ObjPid INTEGER, ObjImageFilePath VARCHAR(200), ObjType VARCHAR(30), HandleOperation VARCHAR(50), Permissions VARCHAR(500), PRIMARY KEY(ID));CREATE TABLE ImageLoads(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), HostProcessPid INTEGER, HostProcessImageFilePath VARCHAR(200), LoadedImage VARCHAR(200), PRIMARY KEY(ID)); CREATE TABLE API(ID INTEGER NOT NULL AUTO_INCREMENT, Timestamp BIGINT, Hostname VARCHAR(50), PPid INTEGER, PImageFilePath VARCHAR(200), Pid INTEGER, ImageFilePath VARCHAR(200), Function VARCHAR(50), PRIMARY KEY(ID));"
 
 #define FORMAT_DB_INSERT_REGISTRY_EVENT_FIRST L"Use Events; INSERT INTO Registry (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Type, RegKey, Value, Data) VALUES ("
 #define FORMAT_DB_INSERT_REGISTRY_EVENT_SECOND ");"
@@ -19,12 +21,27 @@ using namespace std;
 #define FORMAT_DB_INSERT_PROCESS_EVENT_FIRST L"Use Events; INSERT INTO Process (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, CommandLine) VALUES ("
 #define FORMAT_DB_INSERT_PROCESS_EVENT_SECOND ");"
 
+#define FORMAT_DB_INSERT_OBJECT_EVENT_FIRST L"Use Events; INSERT INTO Objects (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, ObjPid, ObjImageFilePath, ObjType, HandleOperation, Permissions) VALUES ("
+#define FORMAT_DB_INSERT_OBJECT_EVENT_SECOND ");"
+
+#define FORMAT_DB_INSERT_LOAD_IMAGE_EVENT_FIRST L"Use Events; INSERT INTO ImageLoads (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, HostProcessPid, HostProcessImageFilePath, LoadedImage) VALUES ("
+#define FORMAT_DB_INSERT_LOAD_IMAGE_EVENT_SECOND ");"
+
+#define FORMAT_DB_INSERT_API_EVENT_FIRST L"Use Events; INSERT INTO API (Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Function) VALUES ("
+#define FORMAT_DB_INSERT_API_EVENT_SECOND ");"
 
 class SQLDriver{
+
+	private:
+		SQLDriver();
+		static SQLDriver* sqlDriverInstance;
 
     public:
 		int sendCommand(const wchar_t* command, size_t stringSize);
 		int initDB();
+		static SQLDriver* getInstance();
+		void sqlInsertProxy(std::vector<std::wstring> logComponents, DWORD currentPid, std::wstring hostname);
+
 		int insertRegistryEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring type, std::wstring key, std::wstring value, std::wstring data);
 		
 		int insertFileEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring type, std::wstring file);
@@ -32,5 +49,11 @@ class SQLDriver{
 		int insertNetworkEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring protocol, std::wstring type, std::wstring lIP, std::wstring lPort, std::wstring remoteIP, std::wstring remotePort);
 		
 		int insertProcessEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring commandLine);
+
+		int insertObjectEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring objPid, std::wstring objImageFilePath, std::wstring objType, std::wstring handleOperation, std::wstring permissions);
+
+		int insertLoadImageEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring hostProcessPid, std::wstring hostProcessImageFilePath, std::wstring loadedImage);
+	
+		int insertAPIEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring function);
 };
 

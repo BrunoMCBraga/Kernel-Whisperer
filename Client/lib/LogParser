@@ -13,4 +13,7 @@ class LogParser{
 		static std::vector<std::wstring> parseFileSystemLog(std::wstring logLine);
 		static std::vector<std::wstring> parseNetworkLog(std::wstring logLine);
 		static std::vector<std::wstring> LogParser::parseProcessLog(std::wstring logLine);
+		static std::vector<std::wstring> LogParser::parseObjectLog(std::wstring logLine);
+		static std::vector<std::wstring> LogParser::parseLoadImageLog(std::wstring logLine);
+		static std::vector<std::wstring> LogParser::parseAPILog(std::wstring logLine);
 };

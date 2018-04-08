@@ -57,7 +57,7 @@ VOID PcreateProcessNotifyRoutineEx(PEPROCESS Process, HANDLE ProcessId, PPS_CREA
 
 	else{
 
-		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, 0, L"-", L"-");
+		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, 0, L"TERMINATION", L"TERMINATION");
 
 	}
 
@@ -91,7 +91,5 @@ VOID PcreateProcessNotifyRoutineEx(PEPROCESS Process, HANDLE ProcessId, PPS_CREA
     	}
 		
 		addNode(logString);
-		ExFreePool(logStringBuffer);
-		ExFreePool(logString);
 		
 }
