@@ -8,6 +8,8 @@
 #include "ProcessMonitor.h"
 #include "Util.h"
 #include "KernelWhispererDriver.h"
+#include "ObjectMonitor.h"
+#include "LoadImageMonitor.h"
 
 
 
@@ -25,6 +27,8 @@ PFLT_FILTER gFilterHandle;
 LARGE_INTEGER callbackRoutineCookie;
 PDEVICE_OBJECT  pDeviceObj;
 
+PVOID objectMonitorCallbackHandle;
+
 UINT32 fwpsListenCalloutId;
 UINT32 fwpsRecvAcceptCalloutId;
 UINT32 fwpsConnectCalloutId;
@@ -37,7 +41,8 @@ UINT64 fwpmListenFilterId;
 UINT64 fwpmRecvAcceptFilterId;
 UINT64 fwpmConnectFilterId;
 
-
+//For the Object Monitor
+extern UNICODE_STRING altitude;
 
 HANDLE engineHandle;
 
@@ -107,6 +112,9 @@ VOID Unload(PDRIVER_OBJECT DriverObject){
 	FwpsCalloutUnregisterById(fwpsListenCalloutId);
 	FwpsCalloutUnregisterById(fwpsRecvAcceptCalloutId);
 	FwpsCalloutUnregisterById(fwpsConnectCalloutId);
+
+	ObUnRegisterCallbacks(&objectMonitorCallbackHandle);
+	PsRemoveLoadImageNotifyRoutine(PloadImageNotifyRoutine);
 
 
 	
@@ -641,6 +649,112 @@ VOID deployProcessMonitor(){
 }
 
 
+VOID deployObjectMonitor(){
+
+	NTSTATUS tempStatus;
+	UNICODE_STRING altitude;
+	OB_CALLBACK_REGISTRATION objectCallbackRegistration;
+	RegistrationContextStruct regContStruct;
+
+
+	OB_OPERATION_REGISTRATION objectOperationRegistrationProcess = {
+
+		PsProcessType,//POBJECT_TYPE                *ObjectType;
+	  	(OB_OPERATION_HANDLE_CREATE|OB_OPERATION_HANDLE_DUPLICATE),//OB_OPERATION                Operations;
+	  	PobPreOperationCallbackProcess, //POB_PRE_OPERATION_CALLBACK  PreOperation;
+	  	PobPostOperationCallbackProcess//POB_POST_OPERATION_CALLBACK PostOperation;
+
+	};
+
+
+	OB_OPERATION_REGISTRATION objectOperationRegistrationThread = {
+
+			PsThreadType,//POBJECT_TYPE                *ObjectType;
+		  	(OB_OPERATION_HANDLE_CREATE|OB_OPERATION_HANDLE_DUPLICATE),//OB_OPERATION                Operations;
+		  	PobPreOperationCallbackThread, //POB_PRE_OPERATION_CALLBACK  PreOperation;
+		  	PobPostOperationCallbackThread//POB_POST_OPERATION_CALLBACK PostOperation;
+
+	};
+
+
+	/*only valid for Windows 10
+	const OB_OPERATION_REGISTRATION objectOperationRegistrationDesktop = {
+
+			ExDesktopObjectType,//POBJECT_TYPE                *ObjectType;
+		  	OB_OPERATION_HANDLE_CREATE|OB_OPERATION_HANDLE_DUPLICATE,//OB_OPERATION                Operations;
+		  	PobPreOperationCallbackDesktop, //POB_PRE_OPERATION_CALLBACK  PreOperation;
+		  	PobPostOperationCallbackDesktop//POB_POST_OPERATION_CALLBACK PostOperation;
+
+	}*/
+
+	OB_OPERATION_REGISTRATION objectOperationRegistrationArray[2];
+	objectOperationRegistrationArray[0] = objectOperationRegistrationProcess;
+	objectOperationRegistrationArray[1] = objectOperationRegistrationThread;
+
+	
+	objectCallbackRegistration.Version = OB_FLT_REGISTRATION_VERSION;
+	objectCallbackRegistration.OperationRegistrationCount = 2;
+	objectCallbackRegistration.RegistrationContext = &regContStruct;
+
+
+
+	RtlInitUnicodeString(&altitude, REGISTRY_MONITOR_ALTITUDE);
+
+	if ((altitude.Buffer == NULL) || (altitude.Length == 0)){
+		DbgPrint("KernelWhispererDriver->deployObjectMonitor->RtlInitUnicodeString failed to create altitude unicode string.\n"); 
+		return;	
+	}
+
+	objectCallbackRegistration.Altitude = altitude;
+	objectCallbackRegistration.OperationRegistration = objectOperationRegistrationArray;
+
+
+
+	tempStatus = ObRegisterCallbacks(&objectCallbackRegistration, &objectMonitorCallbackHandle);
+
+	if(!NT_SUCCESS(tempStatus)){
+		switch(tempStatus){
+				case STATUS_FLT_INSTANCE_ALTITUDE_COLLISION:
+   					DbgPrint("deployObjectMonitor's ObRegisterCallbacks failed: STATUS_FLT_INSTANCE_ALTITUDE_COLLISION\n");
+	    			break;
+	    		case STATUS_INVALID_PARAMETER:
+					DbgPrint("deployObjectMonitor's ObRegisterCallbacks failed: STATUS_INVALID_PARAMETER\n");
+	    			break;
+	    		case STATUS_ACCESS_DENIED:
+					DbgPrint("deployObjectMonitor's ObRegisterCallbacks failed: STATUS_ACCESS_DENIED\n");
+	    			break;
+	    		case STATUS_INSUFFICIENT_RESOURCES:
+					DbgPrint("deployObjectMonitor's ObRegisterCallbacks failed: STATUS_INSUFFICIENT_RESOURCES\n");
+	    			break;
+	    		default:
+	    			DbgPrint("deployObjectMonitor's ObRegisterCallbacks failed: %p\n", tempStatus);
+	    			break;
+
+		}
+
+
+
+	}
+
+}
+
+
+VOID deployImageLoadMonitor(){
+
+	NTSTATUS tempStatus = PsSetLoadImageNotifyRoutine(PloadImageNotifyRoutine);
+	if(!NT_SUCCESS(tempStatus)){
+		switch(tempStatus){
+			case STATUS_INSUFFICIENT_RESOURCES:
+   					DbgPrint("deployImageLoadMonitor's PsSetLoadImageNotifyRoutine failed: STATUS_INSUFFICIENT_RESOURCES\n");
+	    			break;
+	    	default:
+	    			DbgPrint("deployImageLoadMonitor's PsSetLoadImageNotifyRoutine failed:%p\n", tempStatus);
+	    			break;
+		}
+
+	}
+}
+
 DRIVER_INITIALIZE DriverEntry;
 NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)    
 {
@@ -697,10 +811,21 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
    		}
    		initSyncObject();
+
+   		/*
+		 Procedure to add more monitors:
+		 1. Change SQLDriver SQL queries to account for new table
+		 2. Add another parser to LogParser (header+source)
+		 3. Add another case to Client.cpp
+		 4. Add another case to SQLDriver (header + source)
+   		*/
+
    		deployFileSystemMonitor(DriverObject);
    		deployRegistryMonitor(DriverObject);
    		deployNetworkMonitor();
    		deployProcessMonitor();
+   		deployObjectMonitor();
+   		deployImageLoadMonitor();
    		return STATUS_SUCCESS;
 
 		
