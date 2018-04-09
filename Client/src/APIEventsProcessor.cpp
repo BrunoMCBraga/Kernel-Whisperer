@@ -28,20 +28,32 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
   PSID pEveryoneSID;
   PACL pAcl;
 
+  SID_IDENTIFIER_AUTHORITY sidMLA = SECURITY_MANDATORY_LABEL_AUTHORITY;
+  PSID pLowIntegritySID;
+  PACL pSACL;
+  DWORD aclLength;
 
-  result = AllocateAndInitializeSid(&sidAuthWorld, 1,SECURITY_WORLD_RID,0, 0, 0, 0, 0, 0, 0,&pEveryoneSID);
+
+  result = InitializeSecurityDescriptor(&msSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+  if(!result){
+    std::cout << "APIEventsProcessor->run->InitializeSecurityDescriptor failed:" << std::hex << GetLastError() << std::endl;
+    return 1;
+  }
+
+  result = AllocateAndInitializeSid(&sidAuthWorld, 1,SECURITY_WORLD_RID, 0, 0, 0, 0, 0, 0, 0,&pEveryoneSID);
   if(!result){
     std::cout << "APIEventsProcessor->run->AllocateAndInitializeSid failed:" << std::hex << GetLastError() << std::endl;
     return 1;
   }
 
 
-  explicitAccessArray[0].grfAccessPermissions = (GENERIC_ALL | STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL);
+  explicitAccessArray[0].grfAccessPermissions = (GENERIC_READ | GENERIC_WRITE);
   explicitAccessArray[0].grfAccessMode = SET_ACCESS;
-  explicitAccessArray[0].grfInheritance= CONTAINER_INHERIT_ACE|OBJECT_INHERIT_ACE;
+  explicitAccessArray[0].grfInheritance= NO_INHERITANCE;
   explicitAccessArray[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
   explicitAccessArray[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
   explicitAccessArray[0].Trustee.ptstrName = (LPTSTR) pEveryoneSID;
+
 
   error = SetEntriesInAcl(1, explicitAccessArray, NULL, &pAcl);
   if(error != ERROR_SUCCESS){
@@ -53,19 +65,6 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
     return 1;
   }
 
-  result = InitializeSecurityDescriptor(&msSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
-  if(!result){
-    std::cout << "APIEventsProcessor->run->InitializeSecurityDescriptor failed:" << std::hex << GetLastError() << std::endl;
-    if(pEveryoneSID)
-      FreeSid(pEveryoneSID);
-    if(pAcl)
-      LocalFree(pAcl);
-    return 1;
-  }
-
-  //We need to set the DACL inside SECURITY_DESCRIPTOR to NULL to allow full access. I may restrict this a bit more
-  //later but it does not seem necessary.
-
   result = SetSecurityDescriptorDacl(&msSecurityDescriptor, TRUE, pAcl, FALSE);
 
   if(!result){
@@ -74,6 +73,78 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
       FreeSid(pEveryoneSID);
     if(pAcl)
       LocalFree(pAcl);
+    return 1;
+  }
+
+  /*
+    Some processes like Internet Explorer spawn child processes with low-integrity. We need to account for those
+    by allowing low-integrity processes to access the mailslot. We need to configure a SACL. 
+
+  */
+
+  result = AllocateAndInitializeSid(&sidMLA, 1, 0x1000, 0, 0, 0, 0, 0, 0, 0, &pLowIntegritySID);
+  if(!result){
+    std::cout << "APIEventsProcessor->run->AllocateAndInitializeSid failed:" << std::hex << GetLastError() << std::endl;
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    return 1;
+  }
+
+  aclLength = sizeof(ACL) + sizeof(SYSTEM_MANDATORY_LABEL_ACE) + GetLengthSid(pLowIntegritySID) - sizeof(DWORD);
+  pSACL = (PACL) LocalAlloc(LPTR, aclLength);
+
+  if(pSACL == NULL){
+    std::cout << "APIEventsProcessor->run->LocalAlloc failed:" << std::hex << GetLastError() << std::endl;
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    return 1;
+  }
+
+  result = InitializeAcl(pSACL, aclLength, ACL_REVISION);
+  if(!result){
+    std::cout << "APIEventsProcessor->run->InitializeAcl failed:" << std::hex << GetLastError() << std::endl;
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
+    return 1;
+  }
+
+  result = AddMandatoryAce(pSACL, ACL_REVISION, 0, 0, pLowIntegritySID);
+  if(!result){
+    std::cout << "APIEventsProcessor->run->AddMandatoryAce failed:" << std::hex << GetLastError() << std::endl;
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
+    return 1;
+  }
+
+  result = SetSecurityDescriptorSacl(&msSecurityDescriptor, TRUE, pSACL, FALSE);
+  if(!result){
+    std::cout << "APIEventsProcessor->run->SetSecurityDescriptorSacl failed:" << std::hex << GetLastError() << std::endl;
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
     return 1;
   }
 
@@ -89,6 +160,10 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
       FreeSid(pEveryoneSID);
     if(pAcl)
       LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
     return 1;
   }
   
@@ -99,6 +174,10 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
       FreeSid(pEveryoneSID);
     if(pAcl)
       LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
     return 1;
   }
 
@@ -117,23 +196,27 @@ int APIEventsProcessor::run(DWORD currentPid, std::wstring hostNameWide){
 
 
     if((pendingMessages > 0) && (nextMessageSize > 0)){
-
+      std::cout << "Reading" << std::endl;
       result = ReadFile(hSLot, message, nextMessageSize, &numberOfBytesRead, &ov);
       if(!result){
         std::cout << "APIEventsProcessor->run->ReadFile failed: " << std::hex << GetLastError() << std::endl;
         continue;
       }      
-
+      std::wcout << std::wstring(message) << std::endl;
       SQLDriver::getInstance()->sqlInsertProxy(LogParser::parse(std::wstring(message)), currentPid, hostNameWide);
       memset(message, 0, numberOfBytesRead);
 
     }
 
   }
-  if(pEveryoneSID)
-    FreeSid(pEveryoneSID);
-  if(pAcl)
-    LocalFree(pAcl);
+    if(pEveryoneSID)
+      FreeSid(pEveryoneSID);
+    if(pAcl)
+      LocalFree(pAcl);
+    if(pLowIntegritySID)
+      FreeSid(pLowIntegritySID);
+    if(pSACL)
+      LocalFree(pSACL);
 
 
   return 0;

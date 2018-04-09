@@ -35,20 +35,20 @@ VOID PcreateProcessNotifyRoutineEx(PEPROCESS Process, HANDLE ProcessId, PPS_CREA
 
 		if(imageFileName != NULL){
 			if(commandLine != NULL){
-				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%wZ<-->%wZ", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, imageFileName, commandLine);
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%wZ<-->%wZ<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, imageFileName, commandLine, L"S");
 			}
 			else{
-				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%wZ<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, imageFileName, L"-");	
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%wZ<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, imageFileName, L"-", L"S");	
 			}
 
 		}
 		else {
 
 			if(commandLine != NULL){
-				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%wZ", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, L"-", commandLine);
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%wZ<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, L"-", commandLine, L"S");
 			}
 			else{
-				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, L"-", L"-");	
+				tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, CreateInfo->ParentProcessId, L"-", L"-", L"S");	
 			}
 
 		}
@@ -57,7 +57,7 @@ VOID PcreateProcessNotifyRoutineEx(PEPROCESS Process, HANDLE ProcessId, PPS_CREA
 
 	else{
 
-		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, 0, L"TERMINATION", L"TERMINATION");
+		tempStatus = RtlStringCbPrintfW(logStringBuffer, MAX_LOG_BUFFER_SIZE, L"%ls<-->%I64u<-->%d<-->%d<-->%ls<-->%ls<-->%ls", L"PROC", currentTime.QuadPart, ProcessId, 0, L"-", L"-", L"T");
 
 	}
 

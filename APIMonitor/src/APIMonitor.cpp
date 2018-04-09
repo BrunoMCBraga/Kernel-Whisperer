@@ -10,8 +10,9 @@
 using namespace std;
 
 #define MAX_ERROR_MESSAGE_SIZE 200
+#define MUTEX_NAME "KernelWhispererDetoursMutex"
 
-static HANDLE hSlot;
+static HANDLE mutex;
 
 BOOL sendAPIEvent(wchar_t* apiEventString){
 
@@ -22,6 +23,32 @@ BOOL sendAPIEvent(wchar_t* apiEventString){
 	FILETIME timeStampFT;
 	ULONGLONG timeStamp;
 	std::wstring finalEventString;
+	HANDLE hSlot;
+	DWORD waitResult;
+
+	waitResult = WaitForSingleObject(mutex, INFINITE);
+
+	switch(waitResult){
+		case WAIT_FAILED:
+			OutputDebugString("APIMonitor->sendAPIEvent->WaitForSingleObject failed: WAIT_FAILED");
+	    	return FALSE;
+		break;
+		case WAIT_ABANDONED:
+			OutputDebugString("APIMonitor->sendAPIEvent->WaitForSingleObject failed: WAIT_ABANDONED");
+	    	return FALSE;
+		break;
+	}
+
+	hSlot = CreateFile("\\\\.\\mailslot\\kw_mailslot", GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE) NULL);
+	if(hSlot == INVALID_HANDLE_VALUE){
+		errorStringStream << "APIMonitor->sendAPIEvent->CreateFile failed:" << std::hex << GetLastError();
+		OutputDebugString((LPCSTR) errorStringStream.str().c_str());
+    	if(!ReleaseMutex(mutex)){
+    		OutputDebugString("APIMonitor->sendAPIEvent->ReleaseMutex failed.");
+    	}
+    	return FALSE;
+	}
+
 
 	GetSystemTimeAsFileTime(&timeStampFT);
 	timeStamp = (((ULONGLONG) timeStampFT.dwHighDateTime) << 32) + timeStampFT.dwLowDateTime;
@@ -32,9 +59,17 @@ BOOL sendAPIEvent(wchar_t* apiEventString){
 	if(!result){
 		errorStringStream << "APIMonitor->sendAPIEvent->WriteFile failed:" << std::hex << GetLastError();
 		OutputDebugString((LPCSTR) errorStringStream.str().c_str());
+      	CloseHandle(hSlot);
+      	if(!ReleaseMutex(mutex)){
+    		OutputDebugString("APIMonitor->sendAPIEvent->ReleaseMutex failed.");
+    	}
       	return FALSE;
 	}
 
+	CloseHandle(hSlot);
+	if(!ReleaseMutex(mutex)){
+    		OutputDebugString("APIMonitor->sendAPIEvent->ReleaseMutex failed.");
+    }
 	return TRUE;
 }
 
@@ -105,24 +140,33 @@ BOOL detoursDetach(PVOID* pointerToRealFunction, PVOID pointerToProxy){
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
 
-	SECURITY_ATTRIBUTES securityAttributes = {'\0'};
 	std::ostringstream errorStringStream;
 
 	if (DetourIsHelperProcess()) {
         return TRUE;
     }
-    //TODO: for iexplorer, the child process is unable to access the slot due to access denied. This does not
-    //happen with FireFox. The problem is solved if i run Iexplorer as admin..
+    
 	switch(fdwReason){
 		case DLL_PROCESS_ATTACH:
 			OutputDebugString("Attached\n");
-			securityAttributes.bInheritHandle = TRUE;
-			
-			hSlot = CreateFile("\\\\.\\mailslot\\kw_mailslot", GENERIC_WRITE, FILE_SHARE_READ, &securityAttributes, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE) NULL);
-			if(hSlot == INVALID_HANDLE_VALUE){
-				errorStringStream << "APIMonitor->DllMain->CreateFile failed:" << std::hex << GetLastError();
-				OutputDebugString((LPCSTR) errorStringStream.str().c_str());
-		    	return FALSE;
+			mutex = CreateMutex(NULL, FALSE, MUTEX_NAME);
+			//If the caller has limited access rights, the function will fail with ERROR_ACCESS_DENIED and the caller should use the OpenMutex function.
+			if(mutex == NULL){
+				errorStringStream << "APIMonitor->DllMain->CreateMutex failed:" << std::hex << GetLastError();
+				OutputDebugString(errorStringStream.str().c_str());
+				if(GetLastError() == ERROR_ACCESS_DENIED)
+				{
+					mutex = OpenMutex(SYNCHRONIZE ,FALSE, MUTEX_NAME);
+					if(mutex == NULL){
+						errorStringStream.str("");
+						errorStringStream << "APIMonitor->DllMain->OpenMutex failed:" << std::hex << GetLastError();
+						OutputDebugString(errorStringStream.str().c_str());
+						return FALSE;
+					}
+				}
+				else{
+					return FALSE;
+				}
 			}
 
 			DisableThreadLibraryCalls(hinstDLL);
@@ -151,7 +195,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
 	       	}
 
            	OutputDebugString("Committed Transaction (Detached).\n");
-           	CloseHandle(hSlot);
 		break;
 
 

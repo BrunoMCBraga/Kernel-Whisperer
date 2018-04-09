@@ -78,7 +78,7 @@ void SQLDriver::sqlInsertProxy(std::vector<std::wstring> logComponents, DWORD cu
     (SQLDriver::getInstance())->insertNetworkEvent(logComponents[1], hostname, std::to_wstring(parentPid), pImagePath, logComponents[2], imagePath, logComponents[3], logComponents[4], logComponents[5], logComponents[6], logComponents[7], logComponents[8]);
   }
   else if(logComponents[0].compare(std::wstring(L"PROC")) == 0){
-    (SQLDriver::getInstance())->insertProcessEvent(logComponents[1], hostname, logComponents[3], pImagePath, logComponents[2], Util::escapeSpecialCharacters(logComponents[4]), Util::escapeSpecialCharacters(logComponents[5]));
+    (SQLDriver::getInstance())->insertProcessEvent(logComponents[1], hostname, logComponents[3], pImagePath, logComponents[2], Util::escapeSpecialCharacters(logComponents[4]), logComponents[6], Util::escapeSpecialCharacters(logComponents[5]));
   }
 
   else if(logComponents[0].compare(std::wstring(L"OBJECT")) == 0){
@@ -121,7 +121,6 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    int wideCharToMultiByteResult;
 
 	    std::wcout << L"INSERT:[" << std::wstring(command) << L"]" << std::endl;
-
 	    wideCharToMultiByteResult = WideCharToMultiByte(CP_UTF8, 0, command, -1, charBuffer, stringSize*sizeof(wchar_t), NULL, NULL);
 	    if(wideCharToMultiByteResult == 0){
 	    	switch (GetLastError()){
@@ -213,13 +212,13 @@ int SQLDriver::sendCommand(const wchar_t* command, size_t stringSize){
 	    closesocket(ConnectSocket);
 	    WSACleanup();
 	    std::cout << "Response:" << std::string(recvbuf) << std::endl;
-	    std::cout << "FileEntries:" << fileEntries << std::endl;
-	    std::cout << "RegEntries:" << regEntries << std::endl; 
-	    std::cout << "NetworkEntries:" << networkEntries << std::endl; 
-	    std::cout << "ProcessEntries:" << processEntries << std::endl;
-	    std::cout << "ObjectEntries:" << processEntries << std::endl;
-	    std::cout << "ImageLoadEntries:" << imageLoadEntries << std::endl;
-	    std::cout << "ImageLoadEntries:" << apiEntries << std::endl;
+	    std::cout << "FileEntries:" << to_string(fileEntries) << std::endl;
+	    std::cout << "RegEntries:" << to_string(regEntries) << std::endl; 
+	    std::cout << "NetworkEntries:" << to_string(networkEntries) << std::endl; 
+	    std::cout << "ProcessEntries:" << to_string(processEntries) << std::endl;
+	    std::cout << "ObjectEntries:" << to_string(processEntries) << std::endl;
+	    std::cout << "ImageLoadEntries:" << to_string(imageLoadEntries) << std::endl;
+	    std::cout << "ImageLoadEntries:" << to_string(apiEntries) << std::endl;
 	    free(charBuffer);
 	    return 0;
 
@@ -271,10 +270,10 @@ int SQLDriver::insertNetworkEvent(std::wstring timestamp, std::wstring hostname,
 
 }
 
-int SQLDriver::insertProcessEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring commandLine){
+int SQLDriver::insertProcessEvent(std::wstring timestamp, std::wstring hostname, std::wstring ppid, std::wstring pImageFilePath, std::wstring pid, std::wstring imageFilePath, std::wstring pStatus, std::wstring commandLine){
 
 	std::wstringstream queryStringStream;
-	queryStringStream << FORMAT_DB_INSERT_PROCESS_EVENT_FIRST << timestamp << L',' << L'\'' << hostname << L'\'' << L',' << ppid <<  L',' << L'\'' << pImageFilePath << L'\'' << L',' << pid << L',' << L'\'' << imageFilePath << L'\'' << L',' << L'\'' << commandLine << L'\'' << FORMAT_DB_INSERT_PROCESS_EVENT_SECOND;
+	queryStringStream << FORMAT_DB_INSERT_PROCESS_EVENT_FIRST << timestamp << L',' << L'\'' << hostname << L'\'' << L',' << ppid <<  L',' << L'\'' << pImageFilePath << L'\'' << L',' << pid << L',' << L'\'' << imageFilePath << L'\'' << L',' << L'\'' << pStatus << L'\'' << L',' << L'\'' << commandLine << L'\'' << FORMAT_DB_INSERT_PROCESS_EVENT_SECOND;
 	std::wstring finalString = queryStringStream.str();
 	processEntries+=1;
 	

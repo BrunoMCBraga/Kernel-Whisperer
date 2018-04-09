@@ -16,6 +16,7 @@ nmake /f %MAKEFILE% all
 IF ERRORLEVEL 1 EXIT /B %ERRORLEVEL%
 cd bin
 start .\%CLIENT_NAME%
+IF ERRORLEVEL 1 EXIT /B %ERRORLEVEL%
 cd ..\..
 
 cd APIMonitor
