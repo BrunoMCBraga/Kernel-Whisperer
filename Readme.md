@@ -81,3 +81,4 @@ Start by creating a database on MySQL and running the Python proxy i provide on 
 Kernel Whisperer has been tested with the following environment:
 
 * Windows 7 Enterprise SP1 x64 (client + driver) + MySQL(Ver 14.14 Distrib 5.5.59) on Linux remnux 3.13.0-53-generic
+* Detours 3.0 Express
