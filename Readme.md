@@ -38,7 +38,7 @@ More events will be added to Kernel Whisperer as needed.
 	* Network: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Protocol (TCP, UDP, ICMP, UNKNOWN), Type (CONNECT, RECV/ACCEPT, LISTEN), LocalIP, LocalPort, RemoteIP, RemotePort
 	* Process: ID, Timestamp, Hostname, PPid, PImageFilePath, Pstatus (Started, Terminated), Pid, ImageFilePath, CommandLine
 	* ImageLoads: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, HostProcessPid, HostProcessImageFilePath, LoadedImage (i.e. path for loaded file)
-	* Objects: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, ObjPid, ObjImageFilePath, ObjType (currently PROCESS or THREAD), HandleOperation (creation and duplication), Permissions (human-readable representation of requested permissions)
+	* Objects: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, ObjPid, ObjImageFilePath, ObjType (currently PROCESS or THREAD), HandleOperation (creation or duplication), Permissions (human-readable representation of requested permissions)
 	* API: ID, Timestamp, Hostname, PPid, PImageFilePath, Pid, ImageFilePath, Function,
 
 ID is an auto-incremented integer generated for each entry upon insertion. I am using the tuple ID+Timestamp to identify a record since KeQuerySystemTime does not provide a timestamp with enough precision to avoid collisions (i.e. events on the same table with the same timestamp).
