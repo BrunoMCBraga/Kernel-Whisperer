@@ -5,7 +5,7 @@
 #include "RegistryMonitor.h"
 
 
-#define MAX_LOG_BUFFER_SIZE 10000
+#define MAX_LOG_BUFFER_SIZE 2000
 
 
 EX_CALLBACK_FUNCTION RegistryCallback;

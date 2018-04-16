@@ -3,7 +3,7 @@
 #include <ntddk.h>
 
 
-#define MAX_LIST_SIZE 10000
+#define MAX_LIST_SIZE 50000000
 PLOGS_LIST globalList = NULL;
 PKEVENT globalListSyncEvent = NULL;
 
@@ -71,6 +71,7 @@ VOID addNode(PUNICODE_STRING eventString){
 	else{
 			//List too long, we remove the first node...			
 			if(globalList->listSize > MAX_LIST_SIZE){
+				DbgPrint("Util->addNode list full. Droping events.");
 				nodeToDelete = globalList->listBegin;
 				globalList->listBegin = globalList->listBegin->next;
 				globalList->listEnd->next = logsNode;
@@ -167,7 +168,12 @@ int hasInvalidCharacters(PUNICODE_STRING uString){
 	USHORT index;
 	wchar_t tempCharValue;
 	
-	for(index = 0;index < uString->Length; ++index){
+	if(uString == NULL){
+		DbgPrint("Util->hasInvalidCharacters failed: uString is NULL.");
+		return 1;
+	}
+
+	for(index = 0;(index < uString->Length) && (index < uString->MaximumLength); ++index){
 		tempCharValue = uString->Buffer[index];
 		//If we get a zero, we can immediatelly return. This means that the string only contains one null byte, when the string is copied around there is a boundary. If the string has some valid characters and then a null, still makes sense.
 		//As soon as we get an invalid character on the second if (here i assume within the ASCII world to make things simple), we reject the string. Later this can be extended for more characters. 

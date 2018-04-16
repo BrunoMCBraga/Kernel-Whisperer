@@ -8,7 +8,7 @@
 
 //PLOAD_IMAGE_NOTIFY_ROUTINE PloadImageNotifyRoutine;
 
-#define MAX_LOG_BUFFER_SIZE 10000 //bytes
+#define MAX_LOG_BUFFER_SIZE 2000 //bytes
 
 //The operating system does not call load-image notify routines when sections created with the SEC_IMAGE_NO_EXECUTE attribute are mapped to virtual memory.
 void PloadImageNotifyRoutine(PUNICODE_STRING FullImageName, HANDLE ProcessId, PIMAGE_INFO ImageInfo){

@@ -6,7 +6,7 @@
 #include "ObjectMonitor.h"
 #include "Util.h"
 
-#define MAX_LOG_BUFFER_SIZE 10000 //bytes
+#define MAX_LOG_BUFFER_SIZE 2000 //bytes
 #define MAX_PERMISSION_BUFFER_SIZE 500 //bytes
 
 wchar_t* accessMaskHexToString(ULONG hexMask){
