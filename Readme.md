@@ -84,4 +84,4 @@ Kernel Whisperer has been tested with the following environment:
 * Detours 3.0 Express
 
 ## Found this useful? Help me buy a new version of Ubuntu for my old laptop:
-https://www.paypal.com/donate?hosted_button_id=ATZQDP4AWECPL
+https://www.paypal.com/donate/?hosted_button_id=UDFXULV3WV5GL
